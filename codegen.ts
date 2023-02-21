@@ -8,13 +8,16 @@ const config: CodegenConfig = {
   ],
   generates: {
     "./src/graphql/generated/schema.graphql": {
-      plugins: ["schema-ast", "ww.js"],
+      plugins: ["schema-ast"],
       config: {
         federation: false,
         includeDirectives: true,
         strictScalars: true,
         customDirectives: true,
       },
+    },
+    "./src/graphql/operations/index.gql": {
+      plugins: ["my-codegen-plugin.js"],
     },
     "./src/graphql/generated/types.ts": {
       plugins: ["typescript"],

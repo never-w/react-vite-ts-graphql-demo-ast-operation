@@ -1,0 +1,17 @@
+query _schema_query {
+  _schema
+}
+query books_query {
+  books {
+    ... on ColoringBook {
+      author
+      colors
+      title
+    }
+    ... on Textbook {
+      author
+      courses
+      title
+    }
+  }
+}
