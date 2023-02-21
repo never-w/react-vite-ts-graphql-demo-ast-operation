@@ -1,0 +1,46 @@
+schema {
+  query: Query
+}
+
+directive @upper on FIELD_DEFINITION
+
+interface Book {
+  author: String!
+  title: String!
+}
+
+type ColoringBook implements Book {
+  author: String!
+  colors: [String!]!
+  title: String!
+}
+
+type Query {
+  _schema: String
+  books: [Book!]!
+}
+
+type Textbook implements Book {
+  author: String!
+  courses: [String!]!
+  title: String!
+}
+
+query _schema_query {
+  _schema
+}
+
+query books_query {
+  books {
+    ... on ColoringBook {
+      author
+      colors
+      title
+    }
+    ... on Textbook {
+      author
+      courses
+      title
+    }
+  }
+}

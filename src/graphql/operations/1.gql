@@ -1,0 +1,14 @@
+query Query {
+  books {
+    ... on Textbook {
+      title
+      author
+      courses
+    }
+    ... on ColoringBook {
+      title
+      author
+      colors
+    }
+  }
+}
