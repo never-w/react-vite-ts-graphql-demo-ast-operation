@@ -35,6 +35,22 @@ export async function getSchemaFromUrl(url: string): Promise<GraphQLSchema> {
 
     const data = await response.json()
     const source = parse(data.data._schema).loc?.source.body
+    //     console.log(
+    //       parse(
+    //         `
+    //      query Search($contains: String) {
+    //   search(contains: $contains) {
+    //     class @upper(reason: "sasas")
+    //     num
+    //   }
+    // }
+    //     `,
+    //         {
+    //           noLocation: true,
+    //         }
+    //       ).definitions[0],
+    //       "parseparseparseparse"
+    //     )
 
     return buildSchema(source!, {
       noLocation: true,
@@ -75,7 +91,7 @@ async function operationsFromSchema(url: string): Promise<any> {
         field,
       })
 
-      console.log(operationAST, "==operationAST")
+      // console.log(operationAST, "==operationAST")
 
       documentString.push(print(operationAST))
     })

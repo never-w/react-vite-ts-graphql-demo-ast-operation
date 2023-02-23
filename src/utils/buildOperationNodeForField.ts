@@ -68,7 +68,7 @@ export function buildOperationNodeForField({
 }: {
   schema: GraphQLSchema
   kind: OperationTypeNode
-  /** operation root name */
+  /** eg. search */
   field: string
   models?: string[]
   ignore?: Ignore
@@ -118,6 +118,7 @@ function buildOperationAndCollectVariables({
   rootTypeNames,
 }: {
   schema: GraphQLSchema
+  /** root operation name：eg.search、_schema */
   fieldName: string
   kind: OperationTypeNode
   models: string[]
@@ -128,8 +129,10 @@ function buildOperationAndCollectVariables({
   selectedFields: SelectedFields
   rootTypeNames: Set<string>
 }): OperationDefinitionNode {
+  /** root Query GraphQLObjectType */
   const type = getDefinedRootType(schema, kind)
 
+  /** eg. search--GraphQLField */
   const field = type.getFields()[fieldName]
 
   const operationName = `${fieldName}_${kind}`
@@ -388,6 +391,7 @@ function resolveVariable(arg: GraphQLArgument, name?: string): VariableDefinitio
 
   return {
     kind: Kind.VARIABLE_DEFINITION,
+    directives: arg.astNode?.directives,
     variable: {
       kind: Kind.VARIABLE,
       name: {
@@ -491,6 +495,7 @@ function resolveField({
         kind: Kind.NAME,
         value: field.name,
       },
+      directives: field.astNode?.directives,
       ...(fieldName !== field.name && { alias: { kind: Kind.NAME, value: fieldName } }),
       selectionSet:
         resolveSelectionSet({
@@ -519,6 +524,7 @@ function resolveField({
       kind: Kind.NAME,
       value: field.name,
     },
+    directives: field.astNode?.directives,
     ...(fieldName !== field.name && { alias: { kind: Kind.NAME, value: fieldName } }),
     arguments: args,
   }
