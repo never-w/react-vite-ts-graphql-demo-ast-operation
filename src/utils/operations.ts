@@ -1,5 +1,6 @@
-import { buildSchema, GraphQLSchema, OperationTypeNode, parse, print } from "graphql"
-import { astFromDirective, astFromSchema, buildOperationNodeForField, printSchemaWithDirectives } from "@graphql-tools/utils"
+import { buildSchema, getNamedType, GraphQLSchema, isInputObjectType, getDirectiveValues, isObjectType, OperationTypeNode, parse, print } from "graphql"
+import { astFromDirective, astFromSchema, printSchemaWithDirectives } from "@graphql-tools/utils"
+import { buildOperationNodeForField } from "./buildOperationNodeForField"
 
 /**
  * @description Method to get schema from URL.
@@ -35,30 +36,33 @@ export async function getSchemaFromUrl(url: string): Promise<GraphQLSchema> {
     const data = await response.json()
     const source = parse(data.data._schema).loc?.source.body
 
-    return buildSchema(source!)
+    return buildSchema(source!, {
+      noLocation: true,
+    })
   } catch (e) {
     throw e
   }
 }
 
-/**
- * @description Get operations from schema.
- * See: https://github.com/nestjs/graphql/issues/679
- * @param {string} url
- * @return {Promise<DocumentNode>}
- */
 async function operationsFromSchema(url: string): Promise<any> {
   const schema: GraphQLSchema = await getSchemaFromUrl(url)
-  // console.log(printSchemaWithDirectives(schema))
-  console.log(astFromSchema(schema), "9999999999999999999999999")
+
+  Object.values(schema.getQueryType()?.getFields() || {}).forEach((operationField) => {
+    // console.log(getNamedType(operationField.type), "========", operationField.type.toString())
+    // operationField?.args?.forEach((item) => {
+    //   const nameType = getNamedType(item.type)
+    //   console.log(nameType, "==========", item.type.toString())
+    // if (isInputObjectType(nameType)) {
+    //   console.log(nameType.getFields())
+    // }
+    // })
+  })
 
   const operationsDictionary = {
     query: { ...(schema.getQueryType()?.getFields() || {}) },
     mutation: { ...(schema.getMutationType()?.getFields() || {}) },
     subscription: { ...(schema.getSubscriptionType()?.getFields() || {}) },
   }
-
-  console.log(operationsDictionary, "---operationsDictionary")
 
   let documentString: string[] = []
 
@@ -70,6 +74,8 @@ async function operationsFromSchema(url: string): Promise<any> {
         kind: kind as OperationTypeNode,
         field,
       })
+
+      console.log(operationAST, "==operationAST")
 
       documentString.push(print(operationAST))
     })
