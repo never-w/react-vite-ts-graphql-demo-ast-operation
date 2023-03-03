@@ -256,7 +256,11 @@ function resolveSelectionSet({
   }
 
   if (isInterfaceType(type)) {
+    console.log(type, "mmmmmmmmmmmmmm")
+    console.log(schema.getTypeMap(), "ttttttttttttttttt")
+
     const types = Object.values(schema.getTypeMap()).filter((t: any) => isObjectType(t) && t.getInterfaces().includes(type)) as GraphQLObjectType[]
+    console.log(types, "dddddddddddddddddddddddddd")
 
     return {
       kind: Kind.SELECTION_SET,
@@ -317,13 +321,31 @@ function resolveSelectionSet({
       }
     }
 
+    const _interfaces = type.getInterfaces()
+    const _interfacesFields = _interfaces
+      .map((_interfaceItm) => {
+        return _interfaceItm.getFields()
+      })
+      .reduce((pre, cur) => ({ ...pre, ...cur }), {})
+    console.log(
+      _interfaces
+        .map((_interfaceItm) => {
+          return _interfaceItm.getFields()
+        })
+        .reduce((pre, cur) => ({ ...pre, ...cur }), {}),
+      "ObjectType"
+    )
     const fields = type.getFields()
+    const tmpFields = { ...fields, ..._interfacesFields }
+    console.log(_interfacesFields, "mmmmmmmmmmmmmmmmmmmm")
+
+    console.log(tmpFields, "//////////////")
 
     return {
       kind: Kind.SELECTION_SET,
-      selections: Object.keys(fields)
+      selections: Object.keys(tmpFields)
         .filter((fieldName) => {
-          return !hasCircularRef([...ancestors, getNamedType(fields[fieldName].type)], {
+          return !hasCircularRef([...ancestors, getNamedType(tmpFields[fieldName].type)], {
             depth: circularReferenceDepth,
           })
         })
@@ -332,7 +354,7 @@ function resolveSelectionSet({
           if (selectedSubFields) {
             return resolveField({
               type,
-              field: fields[fieldName],
+              field: tmpFields[fieldName],
               models,
               path: [...path, fieldName],
               ancestors,
@@ -517,6 +539,7 @@ function resolveField({
       arguments: args,
     }
   }
+  console.log(field.astNode, ";;;;;;;;;;;;;;;;;;")
 
   return {
     kind: Kind.FIELD,

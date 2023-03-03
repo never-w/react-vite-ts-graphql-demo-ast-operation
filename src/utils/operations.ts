@@ -1,4 +1,19 @@
-import { buildSchema, getNamedType, GraphQLSchema, isInputObjectType, getDirectiveValues, isObjectType, OperationTypeNode, parse, print } from "graphql"
+import {
+  buildSchema,
+  getNamedType,
+  GraphQLSchema,
+  isInputObjectType,
+  getDirectiveValues,
+  isObjectType,
+  OperationTypeNode,
+  parse,
+  FieldDefinitionNode,
+  print,
+  visit,
+  parseValue,
+  Kind,
+  BREAK,
+} from "graphql"
 import { astFromDirective, astFromSchema, printSchemaWithDirectives } from "@graphql-tools/utils"
 import { buildOperationNodeForField } from "./buildOperationNodeForField"
 
@@ -26,33 +41,88 @@ export async function getSchemaFromUrl(url: string): Promise<GraphQLSchema> {
       },
       body: JSON.stringify({
         query: `
-      query Query {
-          _schema
-        }
-    `,
+        query sdl{
+             _service{
+                sdl
+               }
+            }
+         `,
       }),
     })
 
-    const data = await response.json()
-    const source = parse(data.data._schema).loc?.source.body
-    //     console.log(
-    //       parse(
-    //         `
-    //      query Search($contains: String) {
-    //   search(contains: $contains) {
-    //     class @upper(reason: "sasas")
-    //     num
-    //   }
-    // }
-    //     `,
-    //         {
-    //           noLocation: true,
-    //         }
-    //       ).definitions[0],
-    //       "parseparseparseparse"
-    //     )
+    const { data } = await response.json()
 
-    return buildSchema(source!, {
+    const ast = parse(
+      `
+      query Search($contains: String) {
+  search(contains: $contains) {
+    class
+    numType {
+      num {
+        wyq @upper
+      }
+      text 
+    }
+    textEnum
+  }
+}
+        `,
+      {
+        noLocation: true,
+      }
+    )
+    console.log(ast, "======ast")
+
+    const newAst = visit(ast, {
+      enter(node, key, parent, path, ancestors) {
+        if (node.kind === Kind.FIELD) {
+          // console.log(
+          //   node.directives?.find((directive) => directive.name.value === "upper"),
+          //   "wwwwwwwwwwwwwwwwwwwwww"
+          // )
+
+          const prefixKey = ancestors
+            .slice(4, ancestors.length)
+            .filter((_, index) => (index - 1) % 3 === 0)
+            .reduce((pre, cur) => {
+              return pre + (cur as any)?.name.value
+            }, "")
+          const curKey = node.name.value
+
+          const nodeKey = prefixKey + curKey
+
+          // return { ...node, kind: "Field", name: { kind: "Name", value: "wwwwwwwwwwwwwwwwwwww" } }
+        }
+
+        // @return
+        //   undefined: no action
+        //   false: skip visiting this node
+        //   visitor.BREAK: stop visiting altogether
+        //   null: delete this node
+        //   any value: replace this node with the returned value
+      },
+      // Directive(node) {
+      //   console.log(node, "---------------------------uuuuuuuuuuuuuuuuuuu")
+      // },
+      leave(node, key, parent, path, ancestors) {
+        // if (node.kind === Kind.FIELD && node.name.value === "wwwwwwwwwwwwwwwwwwww") {
+        //   console.log(node, "+++++++++++++++")
+        // }
+        // console.log(node, "-------leave")
+        // @return
+        //   undefined: no action
+        //   false: no action
+        //   visitor.BREAK: stop visiting altogether
+        //   null: delete this node
+        //   any value: replace this node with the returned value
+      },
+    })
+
+    // console.log(newAst, "======newAst")
+
+    // console.log(print(newAst), "=====new query")
+
+    return buildSchema(data._service.sdl, {
       noLocation: true,
     })
   } catch (e) {
@@ -80,6 +150,8 @@ async function operationsFromSchema(url: string): Promise<any> {
     subscription: { ...(schema.getSubscriptionType()?.getFields() || {}) },
   }
 
+  console.log(operationsDictionary, "=======operationsDictionary")
+
   let documentString: string[] = []
 
   /** 返回自定义的OperationDefinitionNode */
@@ -96,6 +168,18 @@ async function operationsFromSchema(url: string): Promise<any> {
       documentString.push(print(operationAST))
     })
   })
+  console.log(documentString)
+
+  // TODO: eg.
+  // console.log(
+  //   print(
+  //     buildOperationNodeForField({
+  //       schema,
+  //       kind: "query" as OperationTypeNode,
+  //       field: "search",
+  //     })
+  //   )
+  // )
 
   return documentString
 }
