@@ -256,11 +256,11 @@ function resolveSelectionSet({
   }
 
   if (isInterfaceType(type)) {
-    console.log(type, "mmmmmmmmmmmmmm")
-    console.log(schema.getTypeMap(), "ttttttttttttttttt")
+    // console.log(type, "mmmmmmmmmmmmmm")
+    // console.log(schema.getTypeMap(), "ttttttttttttttttt")
 
     const types = Object.values(schema.getTypeMap()).filter((t: any) => isObjectType(t) && t.getInterfaces().includes(type)) as GraphQLObjectType[]
-    console.log(types, "dddddddddddddddddddddddddd")
+    // console.log(types, "dddddddddddddddddddddddddd")
 
     return {
       kind: Kind.SELECTION_SET,
@@ -321,25 +321,22 @@ function resolveSelectionSet({
       }
     }
 
+    // 获取通过继承的interfaces类型
     const _interfaces = type.getInterfaces()
+    // 得到继承的所有字段
     const _interfacesFields = _interfaces
       .map((_interfaceItm) => {
         return _interfaceItm.getFields()
       })
       .reduce((pre, cur) => ({ ...pre, ...cur }), {})
-    console.log(
-      _interfaces
-        .map((_interfaceItm) => {
-          return _interfaceItm.getFields()
-        })
-        .reduce((pre, cur) => ({ ...pre, ...cur }), {}),
-      "ObjectType"
-    )
-    const fields = type.getFields()
-    const tmpFields = { ...fields, ..._interfacesFields }
-    console.log(_interfacesFields, "mmmmmmmmmmmmmmmmmmmm")
 
-    console.log(tmpFields, "//////////////")
+    // 得到自身的所有字段
+    const fields = type.getFields()
+    // 将继承的字段覆盖自身的字段，这样是
+    const tmpFields = { ...fields, ..._interfacesFields }
+
+    // console.log(_interfacesFields, "mmmmmmmmmmmmmmmmmmmm")
+    // console.log(tmpFields, "//////////////")
 
     return {
       kind: Kind.SELECTION_SET,
@@ -539,7 +536,6 @@ function resolveField({
       arguments: args,
     }
   }
-  console.log(field.astNode, ";;;;;;;;;;;;;;;;;;")
 
   return {
     kind: Kind.FIELD,

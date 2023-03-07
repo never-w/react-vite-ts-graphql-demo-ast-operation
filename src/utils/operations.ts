@@ -66,6 +66,23 @@ export async function getSchemaFromUrl(url: string): Promise<GraphQLSchema> {
     textEnum
   }
 }
+
+query Textbook {
+   books {
+    ... on Textbook {
+      title
+      author
+      courses
+    }
+    ... on ColoringBook {
+      title
+      author
+      colors
+    }
+    author
+    title
+  }
+}
         `,
       {
         noLocation: true,
@@ -85,7 +102,7 @@ export async function getSchemaFromUrl(url: string): Promise<GraphQLSchema> {
             .slice(4, ancestors.length)
             .filter((_, index) => (index - 1) % 3 === 0)
             .reduce((pre, cur) => {
-              return pre + (cur as any)?.name.value
+              return pre + (cur as any)?.name?.value
             }, "")
           const curKey = node.name.value
 
